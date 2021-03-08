@@ -7,6 +7,9 @@ package org.pieles.webserver.httpMirror;
 
 import java.net.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,17 +36,43 @@ public class HttpMirror {
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 out = new PrintWriter(clientSocket.getOutputStream());
                 String zeile;
+                
+                out.print("HTTP/1.1 200 OK\n");
+                out.print("Content-Type: text/html\n");
+                out.print("\n");
+                out.print("<h1 style=\"background-color: blue\">HTTP</h1>");
+                
+                String requestLine = in.readLine();
+                
+                if(requestLine.startsWith("Host")) {
+                    return;
+                }else {
+                    String[] requestURL = requestLine.split(" ");
+                    String path = requestURL[1];
+                    String filename = path.replace("/", "");
+                    System.out.println(path);
+                    out.print("<h2>" + filename + "</h2>");
+                    byte[] encoded = Files.readAllBytes(Paths.get("/home/jpi/sites/" + filename));
+                    String file =  new String(encoded, StandardCharsets.UTF_8);
+                    out.print(file);
+                }
+                
                 while(true) {
                     zeile = in.readLine();
-                    System.out.println(zeile);
                     out.println(zeile);
+                    out.println("<br />");
+                    
                     if(zeile.length() == 0) break;
                     
                 }
+                out.flush();
                 out.close();
                 in.close();
                 clientSocket.close();
             }
+            
+            
+            
         } catch (IOException ex) {
             Logger.getLogger(HttpMirror.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -54,7 +83,7 @@ public class HttpMirror {
      * @param args 
      */
     public static void main(String[] args) {
-        HttpMirror httpMirror = new HttpMirror(9992);
+        HttpMirror httpMirror = new HttpMirror(9914);
     }
     
 }
