@@ -36,6 +36,7 @@ public class HttpMirror {
                 while(true) {
                     zeile = in.readLine();
                     System.out.println(zeile);
+                    out.println(zeile);
                     if(zeile.length() == 0) break;
                     
                 }
@@ -53,7 +54,7 @@ public class HttpMirror {
      * @param args 
      */
     public static void main(String[] args) {
-        HttpMirror httpMirror = new HttpMirror(9990);
+        HttpMirror httpMirror = new HttpMirror(9992);
     }
     
 }
