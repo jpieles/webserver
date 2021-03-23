@@ -10,6 +10,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,12 +36,11 @@ public class HttpMirror {
                 Socket clientSocket = serverSocket.accept();
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 out = new PrintWriter(clientSocket.getOutputStream());
-                String zeile;
+
                 
                 out.print("HTTP/1.1 200 OK\n");
                 out.print("Content-Type: text/html\n");
-                out.print("\n");
-                out.print("<h1 style=\"background-color: blue\">HTTP</h1>");
+                
                 
                 String requestLine = in.readLine();
                 
@@ -49,22 +49,36 @@ public class HttpMirror {
                 }else {
                     String[] requestURL = requestLine.split(" ");
                     String path = requestURL[1];
+                    
+                    HashMap<String, Object> params = new HashMap<>();
+                    if(path.contains("?")) {
+                        /*String[] pathStrings = path.split("?");
+                        String queryString = pathStrings[1];
+                        String[] paramStrings = queryString.split("&");
+                        for(int i = 0; i < paramStrings.length; i++) {
+                            String[] values = paramStrings[i].split("=");
+                            params.put(values[0], values[1]);
+                        }*/
+                    }
+
                     String filename = path.replace("/", "");
-                    System.out.println(path);
-                    out.print("<h2>" + filename + "</h2>");
-                    byte[] encoded = Files.readAllBytes(Paths.get("/home/jpi/sites/" + filename));
+                    
+                    
+                    try {
+                        byte[] encoded = Files.readAllBytes(Paths.get("/home/jpi/webserver/sites/" + filename));
                     String file =  new String(encoded, StandardCharsets.UTF_8);
+                    out.printf("Content-Length: %d\n", file.length());
                     out.print(file);
+                    }catch(Exception ex) {
+                        out.print("HTTP/1.1 200 OK\n");
+                        out.print("Content-Type: text/html\n");
+                        out.print("404");
+                    }
+                    
+                    
                 }
                 
-                while(true) {
-                    zeile = in.readLine();
-                    out.println(zeile);
-                    out.println("<br />");
-                    
-                    if(zeile.length() == 0) break;
-                    
-                }
+                
                 out.flush();
                 out.close();
                 in.close();
@@ -85,5 +99,7 @@ public class HttpMirror {
     public static void main(String[] args) {
         HttpMirror httpMirror = new HttpMirror(9914);
     }
+    
+   
     
 }
